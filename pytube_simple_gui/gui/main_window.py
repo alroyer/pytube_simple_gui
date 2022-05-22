@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QCheckBox, QGridLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
 
 
 class MainWindow(QMainWindow):
@@ -11,15 +11,18 @@ class MainWindow(QMainWindow):
 
         self._source_line_edit = QLineEdit()
         self._destination_line_edit = QLineEdit()
+        self._destination_line_edit.setReadOnly(True)
 
-        self._video_check_box = QCheckBox('video')
-        self._video_check_box.setChecked(True)
-
-        self._audio_check_box = QCheckBox('audio')
-        self._audio_check_box.setChecked(True)
+        browse_button = QPushButton('...')
+        browse_button.clicked.connect(self._on_browse_button_clicked)
 
         download_button = QPushButton('download')
         download_button.clicked.connect(self._on_download_button_clicked)
+
+        horizontal_layout = QHBoxLayout()
+
+        horizontal_layout.addWidget(self._destination_line_edit)
+        horizontal_layout.addWidget(browse_button)
 
         widget = QWidget()
 
@@ -29,7 +32,7 @@ class MainWindow(QMainWindow):
         grid_layout.addWidget(self._source_line_edit, 0, 1)
 
         grid_layout.addWidget(QLabel('destination'), 1, 0)
-        grid_layout.addWidget(self._destination_line_edit, 1, 1)
+        grid_layout.addLayout(horizontal_layout, 1, 1)
 
         vertical_layout = QVBoxLayout()
 
@@ -48,10 +51,13 @@ class MainWindow(QMainWindow):
         # TODO
         pass
 
-    def _on_download_button_clicked(self):
-        if not self._video_check_box.isChecked() and not self._audio_check_box.isChecked():
-            return
+    def _on_browse_button_clicked(self):
+        selected_directory = QFileDialog.getExistingDirectory(
+            self, 'select destination folder', self._destination_line_edit.text(), QFileDialog.ShowDirsOnly)
+        if selected_directory:
+            self._destination_line_edit.setText(selected_directory)
 
+    def _on_download_button_clicked(self):
         source_uri = self._source_line_edit.text()
         destination_folder = self._destination_line_edit.text()
 
