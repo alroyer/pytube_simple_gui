@@ -1,7 +1,7 @@
 from pytube import YouTube
 
 
-class YoutubeVideoDownloader:
+class VideoDownloader:
     def __init__(self) -> None:
         pass
 
