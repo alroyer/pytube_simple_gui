@@ -11,7 +11,7 @@ class MainWindow(QMainWindow):
         self._video_downloader = video_downloader
 
         assets_path = os.path.join(os.path.dirname(
-            os.path.realpath(__file__)), 'assets')
+            os.path.realpath(__file__)), '../assets')
         window_icon = QPixmap(os.path.join(
             assets_path, 'video-recorder-icon-32.png'))
 
