@@ -1,4 +1,7 @@
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
+
+import os
 
 
 class MainWindow(QMainWindow):
@@ -7,7 +10,13 @@ class MainWindow(QMainWindow):
 
         self._video_downloader = video_downloader
 
+        assets_path = os.path.join(os.path.dirname(
+            os.path.realpath(__file__)), 'assets')
+        window_icon = QPixmap(os.path.join(
+            assets_path, 'video-recorder-icon-32.png'))
+
         self.setWindowTitle('pytube simple gui')
+        self.setWindowIcon(window_icon)
 
         self._source_line_edit = QLineEdit()
         self._destination_line_edit = QLineEdit()
