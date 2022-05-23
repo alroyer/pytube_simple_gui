@@ -2,6 +2,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
 
 import os
+import threading
 
 
 class MainWindow(QMainWindow):
@@ -25,15 +26,15 @@ class MainWindow(QMainWindow):
         browse_button = QPushButton('...')
         browse_button.clicked.connect(self._on_browse_button_clicked)
 
-        download_button = QPushButton('download')
-        download_button.clicked.connect(self._on_download_button_clicked)
+        self._download_button = QPushButton('download')
+        self._download_button.clicked.connect(self._on_download_button_clicked)
 
         horizontal_layout = QHBoxLayout()
 
         horizontal_layout.addWidget(self._destination_line_edit)
         horizontal_layout.addWidget(browse_button)
 
-        widget = QWidget()
+        self._widget = QWidget()
 
         grid_layout = QGridLayout()
 
@@ -46,11 +47,11 @@ class MainWindow(QMainWindow):
         vertical_layout = QVBoxLayout()
 
         vertical_layout.addLayout(grid_layout)
-        vertical_layout.addWidget(download_button)
+        vertical_layout.addWidget(self._download_button)
 
-        widget.setLayout(vertical_layout)
+        self._widget.setLayout(vertical_layout)
 
-        self.setCentralWidget(widget)
+        self.setCentralWidget(self._widget)
 
     def _load_settings(self):
         # TODO
@@ -67,10 +68,31 @@ class MainWindow(QMainWindow):
             self._destination_line_edit.setText(selected_directory)
 
     def _on_download_button_clicked(self):
-        source_uri = self._source_line_edit.text()
+        self._widget.setEnabled(False)
+
+        source_url = self._source_line_edit.text()
         destination_folder = self._destination_line_edit.text()
 
-        self._video_downloader.download(source_uri, destination_folder)
+        self._async_download(source_url, destination_folder)
 
-    # def _on_progress(self, stream, chunk, file_handle, bytes_remaining):
-    #     pass
+    def _on_progress(self, stream, chunk, bytes_remaining):
+        total_size = stream.filesize
+        bytes_downloaded = total_size - bytes_remaining
+        percentage_of_completion = bytes_downloaded / total_size * 100
+
+        self._download_button.setText(
+            f'{percentage_of_completion:.0f}% completed')
+
+    def _on_complete(self, stream, file_path):
+        self._widget.setEnabled(True)
+        self._download_button.setText('download')
+
+    def _download(self, source_url: str, destination_folder: str):
+        self._video_downloader.download(
+            source_url, destination_folder, self._on_progress, self._on_complete)
+
+    def _async_download(self, source_url: str, destination_folder: str) -> None:
+        thread = threading.Thread(target=self._download, args=[
+                                  source_url, destination_folder])
+        thread.daemon = True  # TODO
+        thread.start()
