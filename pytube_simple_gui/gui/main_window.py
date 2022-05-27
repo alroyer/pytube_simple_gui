@@ -1,7 +1,9 @@
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout,
+                               QLabel, QLineEdit, QMainWindow, QPushButton, QTableWidget, QVBoxLayout, QWidget)
 
 import os
+import pathlib
 import threading
 
 
@@ -20,8 +22,18 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(window_icon)
 
         self._source_line_edit = QLineEdit()
+        self._source_line_edit.setPlaceholderText(
+            'ex.: https://www.youtube.com/watch?v=ONj9cvHCado')
+
         self._destination_line_edit = QLineEdit()
-        self._destination_line_edit.setReadOnly(True)
+        self._destination_line_edit.setText(str(pathlib.Path().home()))
+        # self._destination_line_edit.setReadOnly(True)
+
+        self._download_queue_table = QTableWidget()
+        self._download_queue_table.setColumnCount(2)
+        # self._download_queue_table.setSizeAdjustPolicy()
+        self._download_queue_table.setHorizontalHeaderLabels(
+            ['Completed', 'Video'])
 
         browse_button = QPushButton('...')
         browse_button.clicked.connect(self._on_browse_button_clicked)
@@ -36,18 +48,22 @@ class MainWindow(QMainWindow):
 
         self._widget = QWidget()
 
-        grid_layout = QGridLayout()
+        # grid_layout = QGridLayout()
 
-        grid_layout.addWidget(QLabel('source'), 0, 0)
-        grid_layout.addWidget(self._source_line_edit, 0, 1)
+        # grid_layout.addWidget(QLabel('source'), 0, 0)
+        # grid_layout.addWidget(self._source_line_edit, 0, 1)
 
-        grid_layout.addWidget(QLabel('destination'), 1, 0)
-        grid_layout.addLayout(horizontal_layout, 1, 1)
+        # grid_layout.addWidget(QLabel('destination'), 1, 0)
+        # grid_layout.addLayout(horizontal_layout, 1, 1)
 
         vertical_layout = QVBoxLayout()
 
-        vertical_layout.addLayout(grid_layout)
-        vertical_layout.addWidget(self._download_button)
+        # vertical_layout.addLayout(grid_layout)
+        # vertical_layout.addWidget(self._download_button)
+        vertical_layout.addWidget(self._source_line_edit)
+        vertical_layout.addWidget(self._destination_line_edit)
+        vertical_layout.addWidget(QLabel('Download Queue'))
+        vertical_layout.addWidget(self._download_queue_table)
 
         self._widget.setLayout(vertical_layout)
 
