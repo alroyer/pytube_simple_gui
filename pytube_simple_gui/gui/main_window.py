@@ -92,7 +92,8 @@ class MainWindow(QMainWindow):
             source_url, destination_folder, self._on_progress, self._on_complete)
 
     def _async_download(self, source_url: str, destination_folder: str) -> None:
-        thread = threading.Thread(target=self._download, args=[
-                                  source_url, destination_folder])
-        thread.daemon = True  # TODO
+        thread = threading.Thread(
+            target=self._download,
+            args=[source_url, destination_folder],
+            daemon=True)
         thread.start()
