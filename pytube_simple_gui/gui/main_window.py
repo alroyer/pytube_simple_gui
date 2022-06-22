@@ -1,5 +1,7 @@
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtCore import (QSettings, QByteArray)
+from PySide6.QtGui import (QCloseEvent, QPixmap)
+from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout,
+                               QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget)
 
 import os
 import threading
@@ -53,12 +55,29 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self._widget)
 
-    def _load_settings(self):
-        # TODO
-        pass
+        self._read_settings()
 
-    def _save_settings(self):
-        # TODO
+    def closeEvent(self, event: QCloseEvent) -> None:
+        self._write_settings()
+        return super().closeEvent(event)
+
+    def _read_settings(self):
+        settings = QSettings('alroyer', 'pytube simple gui')
+        settings.beginGroup('mainwindow')
+        destination = settings.value('destination')
+        if destination:
+            self._destination_line_edit.setText(destination)
+        # geometry = settings.value('geometry')
+        # if geometry:
+        #     pass
+        settings.endGroup()
+
+    def _write_settings(self):
+        settings = QSettings('alroyer', 'pytube simple gui')
+        settings.beginGroup('mainwindow')
+        settings.setValue('destination', self._destination_line_edit.text())
+        # settings.setValue('geometry', self.geometry)
+        settings.endGroup()
         pass
 
     def _on_browse_button_clicked(self):

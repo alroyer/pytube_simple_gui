@@ -16,7 +16,7 @@ class VideoDownloader:
         if stream:
             filename = self._get_filename(
                 destination_folder, stream.default_filename)
-            stream.download(destination_folder, filename=filename)
+            stream.download(destination_folder, filename)
 
     def _get_filename(self, destination_folder: str, filename: str):
         filename_without_ext, extension = filename.split('.')
