@@ -1,17 +1,23 @@
-from PySide6.QtCore import (QSettings, QByteArray)
+from PySide6.QtCore import (QSettings, QByteArray, Signal)
 from PySide6.QtGui import (QCloseEvent, QPixmap)
-from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout,
-                               QLabel, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout, QLabel,
+                               QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget)
 
 import os
 import threading
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, video_downloader) -> None:
+    progress = Signal(int)
+    download_completed = Signal(str)
+
+    def __init__(self, video_downloader):
         super().__init__()
 
         self._video_downloader = video_downloader
+
+        self.progress.connect(self._progress)
+        self.download_completed.connect(self._download_completed)
 
         assets_path = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), '../assets')
@@ -57,7 +63,7 @@ class MainWindow(QMainWindow):
 
         self._read_settings()
 
-    def closeEvent(self, event: QCloseEvent) -> None:
+    def closeEvent(self, event):
         self._write_settings()
         return super().closeEvent(event)
 
@@ -94,23 +100,32 @@ class MainWindow(QMainWindow):
 
         self._async_download(source_url, destination_folder)
 
+    def _progress(self, percentage_of_completion):
+        self._download_button.setText(
+            f'{percentage_of_completion:.0f}% completed')
+
+    def _download_completed(self, file_path):
+        # TODO ask to play the video ?!
+        QMessageBox.information(self, 'pytube simple gui',
+                                f'successfully downloaded\n\n"{file_path}"')
+
+        self._widget.setEnabled(True)
+        self._download_button.setText('download')
+
     def _on_progress(self, stream, chunk, bytes_remaining):
         total_size = stream.filesize
         bytes_downloaded = total_size - bytes_remaining
         percentage_of_completion = bytes_downloaded / total_size * 100
-
-        self._download_button.setText(
-            f'{percentage_of_completion:.0f}% completed')
+        self.progress.emit(percentage_of_completion)
 
     def _on_complete(self, stream, file_path):
-        self._widget.setEnabled(True)
-        self._download_button.setText('download')
+        self.download_completed.emit(file_path)
 
-    def _download(self, source_url: str, destination_folder: str):
+    def _download(self, source_url, destination_folder):
         self._video_downloader.download(
             source_url, destination_folder, self._on_progress, self._on_complete)
 
-    def _async_download(self, source_url: str, destination_folder: str) -> None:
+    def _async_download(self, source_url, destination_folder):
         thread = threading.Thread(
             target=self._download,
             args=[source_url, destination_folder],
