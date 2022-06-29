@@ -1,6 +1,5 @@
-from cgitb import reset
-from PySide6.QtCore import (QSettings, QByteArray, Signal)
-from PySide6.QtGui import (QCloseEvent, QPixmap)
+from PySide6.QtCore import (QSettings, Signal)
+from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget)
 
