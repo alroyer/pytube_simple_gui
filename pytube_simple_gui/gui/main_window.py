@@ -1,10 +1,21 @@
+from cgitb import reset
 from PySide6.QtCore import (QSettings, QByteArray, Signal)
 from PySide6.QtGui import (QCloseEvent, QPixmap)
 from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget)
 
 import os
+import subprocess
+import sys
 import threading
+
+
+def open_file(file_path):
+    if sys.platform == 'win32':
+        os.startfile(file_path)
+    else:
+        opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
+        subprocess.call([opener, file_path])
 
 
 class MainWindow(QMainWindow):
@@ -34,7 +45,7 @@ class MainWindow(QMainWindow):
         browse_button = QPushButton('...')
         browse_button.clicked.connect(self._on_browse_button_clicked)
 
-        self._download_button = QPushButton('download')
+        self._download_button = QPushButton('Download')
         self._download_button.clicked.connect(self._on_download_button_clicked)
 
         horizontal_layout = QHBoxLayout()
@@ -46,10 +57,10 @@ class MainWindow(QMainWindow):
 
         grid_layout = QGridLayout()
 
-        grid_layout.addWidget(QLabel('source'), 0, 0)
+        grid_layout.addWidget(QLabel('Source:'), 0, 0)
         grid_layout.addWidget(self._source_line_edit, 0, 1)
 
-        grid_layout.addWidget(QLabel('destination'), 1, 0)
+        grid_layout.addWidget(QLabel('Destination:'), 1, 0)
         grid_layout.addLayout(horizontal_layout, 1, 1)
 
         vertical_layout = QVBoxLayout()
@@ -88,7 +99,7 @@ class MainWindow(QMainWindow):
 
     def _on_browse_button_clicked(self):
         selected_directory = QFileDialog.getExistingDirectory(
-            self, 'select destination folder', self._destination_line_edit.text(), QFileDialog.ShowDirsOnly)
+            self, 'Select destination folder', self._destination_line_edit.text(), QFileDialog.ShowDirsOnly)
         if selected_directory:
             self._destination_line_edit.setText(selected_directory)
 
@@ -105,12 +116,22 @@ class MainWindow(QMainWindow):
             f'{percentage_of_completion:.0f}% completed')
 
     def _download_completed(self, file_path):
-        # TODO ask to play the video ?!
-        QMessageBox.information(self, 'pytube simple gui',
-                                f'successfully downloaded\n\n"{file_path}"')
-
+        self._ask_open_video(file_path)
         self._widget.setEnabled(True)
         self._download_button.setText('download')
+
+    def _ask_open_video(self, file_path):
+        message_box = QMessageBox(self)
+        message_box.setIcon(QMessageBox.Question)
+        message_box.setWindowTitle('pytube simple gui')
+        message_box.setText(
+            f'Successfully downloaded.\n\n"{file_path}"')
+        message_box.addButton('Open video', QMessageBox.AcceptRole)
+        message_box.addButton('OK', QMessageBox.RejectRole)
+
+        result = message_box.exec()
+        if result == QMessageBox.AcceptRole:
+            open_file(file_path)
 
     def _on_progress(self, stream, chunk, bytes_remaining):
         total_size = stream.filesize
