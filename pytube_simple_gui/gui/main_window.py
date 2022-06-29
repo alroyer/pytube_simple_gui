@@ -83,6 +83,7 @@ class MainWindow(QMainWindow):
         destination = settings.value('destination')
         if destination:
             self._destination_line_edit.setText(destination)
+        # TODO resize and move
         # geometry = settings.value('geometry')
         # if geometry:
         #     pass
@@ -92,6 +93,7 @@ class MainWindow(QMainWindow):
         settings = QSettings('alroyer', 'pytube simple gui')
         settings.beginGroup('mainwindow')
         settings.setValue('destination', self._destination_line_edit.text())
+        # TODO
         # settings.setValue('geometry', self.geometry)
         settings.endGroup()
         pass
