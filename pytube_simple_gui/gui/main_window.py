@@ -20,6 +20,7 @@ def open_file(file_path):
 class MainWindow(QMainWindow):
     progress = Signal(int)
     download_completed = Signal(str)
+    error = Signal(str)
 
     def __init__(self, video_downloader):
         super().__init__()
@@ -28,6 +29,7 @@ class MainWindow(QMainWindow):
 
         self.progress.connect(self._progress)
         self.download_completed.connect(self._download_completed)
+        self.error.connect(self._error)
 
         assets_path = os.path.join(os.path.dirname(
             os.path.realpath(__file__)), '../assets')
@@ -143,9 +145,16 @@ class MainWindow(QMainWindow):
     def _on_complete(self, stream, file_path):
         self.download_completed.emit(file_path)
 
+    def _on_error(self, error_message):
+        self.error.emit(error_message)
+
+    def _error(self, error_message):
+        QMessageBox.warning(self, 'pytube simple gui', error_message)
+        self._widget.setEnabled(True)
+
     def _download(self, source_url, destination_folder):
         self._video_downloader.download(
-            source_url, destination_folder, self._on_progress, self._on_complete)
+            source_url, destination_folder, self._on_progress, self._on_complete, self._on_error)
 
     def _async_download(self, source_url, destination_folder):
         thread = threading.Thread(
