@@ -23,19 +23,21 @@ class MainWindow(QMainWindow):
         self._source_line_edit = QLineEdit()
         self._source_line_edit.setPlaceholderText(
             'ex.: https://www.youtube.com/watch?v=ONj9cvHCado')
+        self._source_line_edit.textChanged.connect(self._on_source_changed)
 
         self._destination_line_edit = QLineEdit()
 
         self._download_queue_table = QTableWidget()
         self._download_queue_table.setColumnCount(3)
         self._download_queue_table.setHorizontalHeaderLabels(
-            ['Source', 'Destination', 'Progress'])
+            ['Progress', 'Source', 'Destination'])
 
         browse_button = QPushButton('...')
         browse_button.clicked.connect(self._on_browse_button_clicked)
 
-        download_button = QPushButton('Download')
-        download_button.clicked.connect(self._on_download_button_clicked)
+        self._download_button = QPushButton('Download')
+        self._download_button.clicked.connect(self._on_download_button_clicked)
+        self._download_button.setEnabled(False)
 
         horizontal_layout = QHBoxLayout()
 
@@ -55,7 +57,7 @@ class MainWindow(QMainWindow):
         vertical_layout = QVBoxLayout()
 
         vertical_layout.addLayout(grid_layout)
-        vertical_layout.addWidget(download_button)
+        vertical_layout.addWidget(self._download_button)
         vertical_layout.addWidget(QLabel('Download Queue'))
         vertical_layout.addWidget(self._download_queue_table)
 
@@ -86,7 +88,7 @@ class MainWindow(QMainWindow):
         self.resize(size)
         self.move(position)
 
-        # TODO validate visible ?!
+        # TODO validate visibility ?!
 
     def _write_settings(self):
         settings = QSettings('alroyer', 'pytube simple gui')
@@ -95,6 +97,9 @@ class MainWindow(QMainWindow):
         settings.setValue('size', self.size())
         settings.setValue('position', self.pos())
         settings.endGroup()
+
+    def _on_source_changed(self, source_url):
+        self._download_button.setEnabled(True if source_url else False)
 
     def _on_browse_button_clicked(self):
         selected_directory = QFileDialog.getExistingDirectory(
