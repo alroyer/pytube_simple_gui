@@ -1,4 +1,4 @@
-from .video_downloader_adapter import VideoDownloaderAdapter
+from .video_downloader import VideoDownloader
 from PySide6.QtCore import (QPoint, QSettings, QSize)
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout, QLabel, QTableWidget,
@@ -17,8 +17,12 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self._video_downloader = VideoDownloaderAdapter(
+        self._video_downloader = VideoDownloader(
             self._on_progress, self._on_complete, self._on_error)
+
+        self._video_downloader.progressed.connect(self._on_progress)
+        self._video_downloader.completed.connect(self._on_complete)
+        self._video_downloader.error.connect(self._on_error)
 
         self._source_line_edit = QLineEdit()
         self._source_line_edit.setPlaceholderText(
@@ -30,7 +34,7 @@ class MainWindow(QMainWindow):
         self._download_queue_table = QTableWidget()
         self._download_queue_table.setColumnCount(3)
         self._download_queue_table.setHorizontalHeaderLabels(
-            ['Progress', 'Source', 'Destination'])
+            ['', 'Source', 'Destination'])
 
         browse_button = QPushButton('...')
         browse_button.clicked.connect(self._on_browse_button_clicked)
@@ -111,60 +115,14 @@ class MainWindow(QMainWindow):
         self._video_downloader.download(
             self._source_line_edit.text(), self._destination_line_edit.text())
 
-    def _on_progress(self):
+    def _on_progress(self, file_path, percentage):
+        print(f'on progress {file_path}, {percentage}')
         pass
 
-    def _on_complete(self):
+    def _on_complete(self, file_path):
+        print(f'on complete {file_path}')
         pass
 
-    def _on_error(self):
+    def _on_error(self, source_url):
+        print(f'on error {source_url}')
         pass
-
-    # def _progress(self, percentage_of_completion):
-    #     self._download_button.setText(
-    #         f'{percentage_of_completion:.0f}% completed')
-
-    # def _download_completed(self, file_path):
-    #     self._ask_open_video(file_path)
-    #     self._widget.setEnabled(True)
-    #     self._download_button.setText('download')
-
-    # def _ask_open_video(self, file_path):
-    #     message_box = QMessageBox(self)
-    #     message_box.setIcon(QMessageBox.Question)
-    #     message_box.setWindowTitle(TITLE)
-    #     message_box.setText(
-    #         f'Successfully downloaded.\n\n"{file_path}"')
-    #     message_box.addButton('Open video', QMessageBox.AcceptRole)
-    #     message_box.addButton('OK', QMessageBox.RejectRole)
-
-    #     result = message_box.exec()
-    #     if result == QMessageBox.AcceptRole:
-    #         open_file(file_path)
-
-    # def _on_progress(self, stream, chunk, bytes_remaining):
-    #     total_size = stream.filesize
-    #     bytes_downloaded = total_size - bytes_remaining
-    #     percentage_of_completion = bytes_downloaded / total_size * 100
-    #     self.progress.emit(percentage_of_completion)
-
-    # def _on_complete(self, stream, file_path):
-    #     self.download_completed.emit(file_path)
-
-    # def _on_error(self, error_message):
-    #     self.error.emit(error_message)
-
-    # def _error(self, error_message):
-    #     QMessageBox.warning(self, 'pytube simple gui', error_message)
-    #     self._widget.setEnabled(True)
-
-    # def _download(self, source_url, destination_folder):
-    #     self._video_downloader.download(
-    #         source_url, destination_folder, self._on_progress, self._on_complete, self._on_error)
-
-    # def _async_download(self, source_url, destination_folder):
-    #     thread = threading.Thread(
-    #         target=self._download,
-    #         args=[source_url, destination_folder],
-    #         daemon=True)
-    #     thread.start()
