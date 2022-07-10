@@ -124,5 +124,4 @@ class MainWindow(QMainWindow):
         pass
 
     def _on_error(self, source_url):
-        print(f'on error {source_url}')
-        pass
+        QMessageBox.critical(self, TITLE, f'Unable to download "{source_url}"')
