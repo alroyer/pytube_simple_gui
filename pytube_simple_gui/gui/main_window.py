@@ -62,7 +62,6 @@ class MainWindow(QMainWindow):
 
         vertical_layout.addLayout(grid_layout)
         vertical_layout.addWidget(self._download_button)
-        vertical_layout.addWidget(QLabel('Download Queue'))
         vertical_layout.addWidget(self._download_queue_table)
 
         widget.setLayout(vertical_layout)
@@ -103,7 +102,8 @@ class MainWindow(QMainWindow):
         settings.endGroup()
 
     def _on_source_changed(self, source_url):
-        self._download_button.setEnabled(True if source_url else False)
+        enabled = 'youtube' in source_url.lower()
+        self._download_button.setEnabled(enabled)
 
     def _on_browse_button_clicked(self):
         selected_directory = QFileDialog.getExistingDirectory(
