@@ -1,9 +1,8 @@
 from .video_downloader import VideoDownloader
 from PySide6.QtCore import (QPoint, QSettings, QSize)
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout, QLabel, QTableWidget,
+from PySide6.QtWidgets import (QFileDialog, QGridLayout, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
                                QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget)
-
 import os
 import pathlib
 
@@ -16,6 +15,8 @@ ASSETS_FOLDER = os.path.join(os.path.dirname(
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        self._videos = {}
 
         self._video_downloader = VideoDownloader(
             self._on_progress, self._on_complete, self._on_error)
@@ -31,10 +32,13 @@ class MainWindow(QMainWindow):
 
         self._destination_line_edit = QLineEdit()
 
+        header_labels = ['', 'Title']
+
         self._download_queue_table = QTableWidget()
-        self._download_queue_table.setColumnCount(3)
-        self._download_queue_table.setHorizontalHeaderLabels(
-            ['', 'Source', 'Destination'])
+        self._download_queue_table.setColumnCount(len(header_labels))
+        self._download_queue_table.verticalHeader().hide()
+        self._download_queue_table.setHorizontalHeaderLabels(header_labels)
+        self._download_queue_table.horizontalHeader().setStretchLastSection(True)
 
         browse_button = QPushButton('...')
         browse_button.clicked.connect(self._on_browse_button_clicked)
@@ -77,7 +81,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         self._write_settings()
-        return super().closeEvent(event)
+        super().closeEvent(event)
 
     def _read_settings(self):
         settings = QSettings('alroyer', 'pytube simple gui')
@@ -101,6 +105,17 @@ class MainWindow(QMainWindow):
         settings.setValue('position', self.pos())
         settings.endGroup()
 
+    def _update_table(self):
+        self._download_queue_table.setRowCount(len(self._videos))
+        row = 0
+        for key in self._videos:
+            percentage, title, _ = self._videos[key]
+            self._download_queue_table.setItem(
+                row, 0, QTableWidgetItem(f'{percentage}'))
+            self._download_queue_table.setItem(
+                row, 1, QTableWidgetItem(f'{title}'))
+            row += 1
+
     def _on_source_changed(self, source_url):
         enabled = 'youtube' in source_url.lower()
         self._download_button.setEnabled(enabled)
@@ -114,14 +129,16 @@ class MainWindow(QMainWindow):
     def _on_download_button_clicked(self):
         self._video_downloader.download(
             self._source_line_edit.text(), self._destination_line_edit.text())
+        self._update_table()
 
-    def _on_progress(self, file_path, percentage):
-        print(f'on progress {file_path}, {percentage}')
-        pass
+    def _on_progress(self, percentage, source_url, destination_path):
+        self._videos[destination_path] = (
+            percentage, source_url, destination_path)
+        self._update_table()
 
-    def _on_complete(self, file_path):
-        print(f'on complete {file_path}')
-        pass
+    def _on_complete(self, source_url, destination_path):
+        print(f'on complete {source_url} {destination_path}')
+        # TODO
 
     def _on_error(self, source_url):
         QMessageBox.critical(self, TITLE, f'Unable to download "{source_url}"')
