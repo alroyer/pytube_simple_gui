@@ -1,9 +1,9 @@
+from .utils import open_file
 from .video_downloader import VideoDownloader
 from PySide6.QtCore import (QPoint, QSettings, QSize)
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QTableWidget, QTableWidgetItem,
                                QLineEdit, QMainWindow, QMessageBox, QPushButton, QVBoxLayout, QWidget)
-from .utils import open_file
 import os
 import pathlib
 
@@ -33,7 +33,6 @@ class MainWindow(QMainWindow):
 
         self._destination_line_edit = QLineEdit()
 
-        # header_labels = ['', 'Title', 'Filename']
         header_labels = ['', 'Filename']
 
         self._download_queue_table = QTableWidget()
@@ -85,6 +84,7 @@ class MainWindow(QMainWindow):
         self._read_settings()
 
     def closeEvent(self, event):
+        # TODO ask if a video is not done?
         self._write_settings()
         super().closeEvent(event)
 
@@ -117,19 +117,17 @@ class MainWindow(QMainWindow):
             done, percentage, title, destination_path = self._videos[key]
             filename = pathlib.Path(destination_path).name
 
+            item = None
             if done:
                 item = QTableWidgetItem('▶')
-                item.setData(0x0100, destination_path)
-                # item.setTextAlignment(4)
-                self._download_queue_table.setItem(
-                    row, 0, item)
+                item.setData(0x0100, key)
             else:
-                self._download_queue_table.setItem(
-                    row, 0, QTableWidgetItem(f'{percentage}'))
+                item = QTableWidgetItem(f'{percentage}')
+            # TODO center text item.setTextAlignment(4)
+
+            self._download_queue_table.setItem(row, 0, item)
             self._download_queue_table.setItem(
                 row, 1, QTableWidgetItem(f'{filename}'))
-            # self._download_queue_table.setItem(
-            #     row, 2, QTableWidgetItem(f'{filename}'))
             row += 1
 
     def _on_source_changed(self, source_url):
@@ -138,7 +136,7 @@ class MainWindow(QMainWindow):
 
     def _on_browse_button_clicked(self):
         selected_directory = QFileDialog.getExistingDirectory(
-            self, 'Select destination folder', self._destination_line_edit.text(), QFileDialog.ShowDirsOnly)
+            self, 'Select destination folder', self._destination_line_edit.text())
         if selected_directory:
             self._destination_line_edit.setText(selected_directory)
 
@@ -148,9 +146,14 @@ class MainWindow(QMainWindow):
         self._update_table()
 
     def _on_item_clicked(self, item):
-        destination_path = item.data(0x0100)
-        if destination_path:
-            open_file(destination_path)
+        key = item.data(0x0100)
+        if key:
+            done, percentage, title, destination_path = self._videos[key]
+            if os.path.exists(destination_path):
+                open_file(destination_path)
+            else:
+                QMessageBox.critical(
+                    self, TITLE, f'Unable to open "{destination_path}".')
 
     def _on_progress(self, percentage, source_url, destination_path):
         self._videos[destination_path] = (
@@ -163,4 +166,5 @@ class MainWindow(QMainWindow):
         self._update_table()
 
     def _on_error(self, source_url):
-        QMessageBox.critical(self, TITLE, f'Unable to download "{source_url}"')
+        QMessageBox.critical(
+            self, TITLE, f'Unable to download "{source_url}".')
