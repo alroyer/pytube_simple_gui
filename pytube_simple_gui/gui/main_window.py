@@ -49,6 +49,7 @@ class MainWindow(QMainWindow):
 
         self._source_line_edit = QLineEdit()
         self._source_line_edit.setPlaceholderText('https://www.youtube.com/watch?v=9FnG9lGLyEM')
+        self._source_line_edit.textChanged.connect(self._on_source_changed)
 
         self._destination_line_edit = QLineEdit()
         self._destination_line_edit.setReadOnly(True)
@@ -84,6 +85,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self._widget)
 
         self._read_settings()
+
+        self._update_ui()
 
     def closeEvent(self, event):
         self._write_settings()
@@ -124,6 +127,14 @@ class MainWindow(QMainWindow):
         destination_folder = self._destination_line_edit.text()
 
         self._async_download(source_url, destination_folder)
+
+    def _on_source_changed(self):
+        self._update_ui()
+
+    def _update_ui(self):
+        self._download_button.setEnabled(
+            self._source_line_edit.text().lower().startswith('https://www.youtube.com/watch?v=')
+        )
 
     def _progress(self, percentage_of_completion):
         self._download_button.setText(f'{percentage_of_completion:.0f}% completed')
