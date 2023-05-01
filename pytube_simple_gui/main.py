@@ -1,8 +1,8 @@
-from gui.main_window import MainWindow
-from core.youtube.video_downloader import VideoDownloader
-from PySide6.QtWidgets import QApplication
-
 import sys
+
+from core.youtube.video_downloader import VideoDownloader
+from gui.main_window import MainWindow
+from PySide6.QtWidgets import QApplication
 
 
 def main():
