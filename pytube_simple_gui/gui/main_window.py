@@ -3,7 +3,7 @@ import subprocess
 import sys
 import threading
 
-from PySide6.QtCore import QSettings, Signal
+from PySide6.QtCore import QSettings, QSize, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -48,6 +48,8 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(window_icon)
 
         self._source_line_edit = QLineEdit()
+        self._source_line_edit.setPlaceholderText('https://www.youtube.com/watch?v=9FnG9lGLyEM')
+
         self._destination_line_edit = QLineEdit()
         self._destination_line_edit.setReadOnly(True)
 
@@ -93,22 +95,17 @@ class MainWindow(QMainWindow):
         destination = settings.value('destination')
         if destination and isinstance(destination, str):
             self._destination_line_edit.setText(destination)
-        # TODO resize and move
-        # geometry = settings.value('geometry')
-        # if geometry:
-        #     pass
+        size = settings.value('size')
+        if size and isinstance(size, QSize):
+            self.resize(size)
         settings.endGroup()
-
-        self._source_line_edit.setText('https://www.youtube.com/watch?v=9FnG9lGLyEM')
 
     def _write_settings(self):
         settings = QSettings('alroyer', 'pytube simple gui')
         settings.beginGroup('mainwindow')
         settings.setValue('destination', self._destination_line_edit.text())
-        # TODO
-        # settings.setValue('geometry', self.geometry)
+        settings.setValue('size', self.size())
         settings.endGroup()
-        pass
 
     def _on_browse_button_clicked(self):
         selected_directory = QFileDialog.getExistingDirectory(

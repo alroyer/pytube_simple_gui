@@ -26,9 +26,9 @@ class VideoDownloader:
             if stream:
                 filename = self._get_filename(destination_folder, stream.default_filename)
                 stream.download(destination_folder, filename)
-        except Exception:
+        except Exception as e:
             if on_error_callback:
-                on_error_callback(f'Error downloading "{source_url}"')
+                on_error_callback(f'Error downloading "{source_url}"\n\n(details "{e}")')
 
     def _get_filename(self, destination_folder: str, filename: str):
         filename_without_ext, extension = filename.split('.')
