@@ -1,6 +1,4 @@
 import os
-import subprocess
-import sys
 import threading
 
 from PySide6.QtCore import QSettings, QSize, Signal
@@ -19,23 +17,16 @@ from PySide6.QtWidgets import (
 )
 
 
-def open_file(file_path):
-    if sys.platform == 'win32':
-        os.startfile(file_path)
-    else:
-        opener = 'open' if sys.platform == 'darwin' else 'xdg-open'
-        subprocess.call([opener, file_path])
-
-
 class MainWindow(QMainWindow):
     progress = Signal(int)
     download_completed = Signal(str)
     error = Signal(str)
 
-    def __init__(self, video_downloader):
+    def __init__(self, video_downloader, video_player):
         super().__init__()
 
         self._video_downloader = video_downloader
+        self._video_player = video_player
 
         self.progress.connect(self._progress)
         self.download_completed.connect(self._download_completed)
@@ -149,12 +140,12 @@ class MainWindow(QMainWindow):
         message_box.setIcon(QMessageBox.Icon.Question)
         message_box.setWindowTitle('pytube simple gui')
         message_box.setText(f'Successfully downloaded.\n\n"{file_path}"')
-        message_box.addButton('Open video', QMessageBox.ButtonRole.AcceptRole)
+        message_box.addButton('Play video', QMessageBox.ButtonRole.AcceptRole)
         message_box.addButton('OK', QMessageBox.ButtonRole.RejectRole)
 
         result = message_box.exec()
-        if result == QMessageBox.ButtonRole.AcceptRole:
-            open_file(file_path)
+        if result == 0:
+            self._video_player(file_path)
 
     def _on_progress(self, stream, chunk, bytes_remaining):
         total_size = stream.filesize
@@ -178,7 +169,5 @@ class MainWindow(QMainWindow):
         )
 
     def _async_download(self, source_url, destination_folder):
-        thread = threading.Thread(
-            target=self._download, args=[source_url, destination_folder], daemon=True
-        )
+        thread = threading.Thread(target=self._download, args=[source_url, destination_folder], daemon=True)
         thread.start()
