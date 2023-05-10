@@ -16,17 +16,20 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+TITLE = 'pytube simple gui'
+
 
 class MainWindow(QMainWindow):
     progress = Signal(int)
     download_completed = Signal(str)
     error = Signal(str)
 
-    def __init__(self, video_downloader, video_player):
+    def __init__(self, video_downloader, video_player, translator):
         super().__init__()
 
         self._video_downloader = video_downloader
         self._video_player = video_player
+        self._translator = translator
 
         self.progress.connect(self._progress)
         self.download_completed.connect(self._download_completed)
@@ -35,7 +38,7 @@ class MainWindow(QMainWindow):
         assets_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../assets')
         window_icon = QPixmap(os.path.join(assets_path, 'video-recorder-icon-32.png'))
 
-        self.setWindowTitle('pytube simple gui')
+        self.setWindowTitle(TITLE)
         self.setWindowIcon(window_icon)
 
         self._source_line_edit = QLineEdit()
@@ -48,7 +51,7 @@ class MainWindow(QMainWindow):
         browse_button = QPushButton('...')
         browse_button.clicked.connect(self._on_browse_button_clicked)
 
-        self._download_button = QPushButton('Download')
+        self._download_button = QPushButton(self.tr('Download'))
         self._download_button.clicked.connect(self._on_download_button_clicked)
 
         horizontal_layout = QHBoxLayout()
@@ -60,10 +63,10 @@ class MainWindow(QMainWindow):
 
         grid_layout = QGridLayout()
 
-        grid_layout.addWidget(QLabel('Source:'), 0, 0)
+        grid_layout.addWidget(QLabel(self.tr('Source:')), 0, 0)
         grid_layout.addWidget(self._source_line_edit, 0, 1)
 
-        grid_layout.addWidget(QLabel('Destination:'), 1, 0)
+        grid_layout.addWidget(QLabel(self.tr('Destination:')), 1, 0)
         grid_layout.addLayout(horizontal_layout, 1, 1)
 
         vertical_layout = QVBoxLayout()
@@ -104,7 +107,7 @@ class MainWindow(QMainWindow):
     def _on_browse_button_clicked(self):
         selected_directory = QFileDialog.getExistingDirectory(
             self,
-            'Select destination folder',
+            self.tr('Select destination folder'),
             self._destination_line_edit.text(),
             QFileDialog.Option.ShowDirsOnly,
         )
@@ -128,20 +131,21 @@ class MainWindow(QMainWindow):
         )
 
     def _progress(self, percentage_of_completion):
-        self._download_button.setText(f'{percentage_of_completion:.0f}% completed')
+        self._download_button.setText(self.tr('{}% completed').format(percentage_of_completion))
 
     def _download_completed(self, file_path):
         self._ask_open_video(file_path)
         self._widget.setEnabled(True)
-        self._download_button.setText('download')
+
+        self._download_button.setText(self.tr('Download'))
 
     def _ask_open_video(self, file_path):
         message_box = QMessageBox(self)
         message_box.setIcon(QMessageBox.Icon.Question)
-        message_box.setWindowTitle('pytube simple gui')
-        message_box.setText(f'Successfully downloaded.\n\n"{file_path}"')
-        message_box.addButton('Play video', QMessageBox.ButtonRole.AcceptRole)
-        message_box.addButton('OK', QMessageBox.ButtonRole.RejectRole)
+        message_box.setWindowTitle(TITLE)
+        message_box.setText(self.tr('Successfully downloaded.\n\n"{}"').format(file_path))
+        message_box.addButton(self.tr('Play video'), QMessageBox.ButtonRole.AcceptRole)
+        message_box.addButton(self.tr('Close'), QMessageBox.ButtonRole.RejectRole)
 
         result = message_box.exec()
         if result == 0:
@@ -160,7 +164,7 @@ class MainWindow(QMainWindow):
         self.error.emit(error_message)
 
     def _error(self, error_message):
-        QMessageBox.warning(self, 'pytube simple gui', error_message)
+        QMessageBox.warning(self, TITLE, error_message)
         self._widget.setEnabled(True)
 
     def _download(self, source_url, destination_folder):
@@ -169,5 +173,7 @@ class MainWindow(QMainWindow):
         )
 
     def _async_download(self, source_url, destination_folder):
-        thread = threading.Thread(target=self._download, args=[source_url, destination_folder], daemon=True)
+        thread = threading.Thread(
+            target=self._download, args=[source_url, destination_folder], daemon=True
+        )
         thread.start()
