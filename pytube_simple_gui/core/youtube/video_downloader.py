@@ -24,13 +24,13 @@ class VideoDownloader:
 
             stream = you_tube.streams.get_highest_resolution()
             if stream:
-                filename = self._get_filename(destination_folder, stream.default_filename)
+                filename = self._format_filename(destination_folder, stream.default_filename)
                 stream.download(destination_folder, filename)
         except Exception as e:
             if on_error_callback:
-                on_error_callback(f'Error downloading "{source_url}"\n\n(details "{e}")')
+                on_error_callback(source_url, str(e))
 
-    def _get_filename(self, destination_folder: str, filename: str):
+    def _format_filename(self, destination_folder: str, filename: str):
         filename_without_ext, extension = filename.split('.')
         destination_path = os.path.join(destination_folder, filename)
         index = 1

@@ -22,7 +22,7 @@ TITLE = 'pytube simple gui'
 class MainWindow(QMainWindow):
     progress = Signal(int)
     download_completed = Signal(str)
-    error = Signal(str)
+    error = Signal(str, str)
 
     def __init__(self, video_downloader, video_player, translator):
         super().__init__()
@@ -117,6 +117,8 @@ class MainWindow(QMainWindow):
     def _on_download_button_clicked(self):
         self._widget.setEnabled(False)
 
+        self._progress(0)
+
         source_url = self._source_line_edit.text()
         destination_folder = self._destination_line_edit.text()
 
@@ -160,11 +162,14 @@ class MainWindow(QMainWindow):
     def _on_complete(self, stream, file_path):
         self.download_completed.emit(file_path)
 
-    def _on_error(self, error_message):
-        self.error.emit(error_message)
+    def _on_error(self, source_url, error_message):
+        self.error.emit(source_url, error_message)
 
-    def _error(self, error_message):
-        QMessageBox.warning(self, TITLE, error_message)
+    def _error(self, source_url, error_message):
+        text = self.tr('Error downloading "{}"\n\n(details "{}")').format(source_url, error_message)
+        QMessageBox.warning(self, TITLE, text)
+
+        self._update_ui()
         self._widget.setEnabled(True)
 
     def _download(self, source_url, destination_folder):
